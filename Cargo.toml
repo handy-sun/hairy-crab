@@ -1,0 +1,19 @@
+[package]
+name = "crabrs"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+native-dialog = "0.*"
+
+[[bin]]
+name = "native_gui"
+path = "src/native_gui.rs"
+
+[[bin]]
+name = "dp"
+path = "src/dp.rs"
+
+[[bin]]
+name = "slice2int"
+path = "src/slice2int.rs"
