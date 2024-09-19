@@ -1,0 +1,11 @@
+[package]
+name = "gui"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+native-dialog = "0.*"
+
+[[bin]]
+name = "native-dia"
+path = "src/main.rs"

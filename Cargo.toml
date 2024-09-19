@@ -1,19 +1,39 @@
-[package]
-name = "crabrs"
-version = "0.0.1"
+# [package]
+# name = "crabrs"
+# version = "0.0.1"
+# edition = "2021"
+
+# [dependencies]
+# native-dialog = "0.*"
+# anyhow = "1.*"
+# goblin = "0.8"
+# rustc-demangle = "0.1"
+# cpp_demangle = "0.4"
+
+[workspace]
+members = [ "crates/*" ]
+# members = [ "crates/mac" ]
+resolver = "2"
+
+
+[workspace.package]
+rust-version = "1.80"
 edition = "2021"
+license = "MIT OR Apache-2.0"
 
-[dependencies]
-native-dialog = "0.*"
 
-[[bin]]
-name = "native_gui"
-path = "src/native_gui.rs"
+# [[bin]]
+# name = "native_gui"
+# path = "src/native_gui.rs"
 
-[[bin]]
-name = "dp"
-path = "src/dp.rs"
+# [[bin]]
+# name = "dp"
+# path = "src/dp.rs"
 
-[[bin]]
-name = "slice2int"
-path = "src/slice2int.rs"
+# [[bin]]
+# name = "slice2int"
+# path = "src/slice2int.rs"
+
+# [[bin]]
+# name = "rdelf"
+# path = "src/rdelf.rs"
