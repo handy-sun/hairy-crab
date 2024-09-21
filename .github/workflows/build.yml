@@ -1,0 +1,81 @@
+name: build-3sys
+
+env:
+  CI_INTERMEDIATES_DIR: "_ci-intermediates"
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    name: ${{ matrix.job.target }}
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - {os: windows-2022, target: x86_64-pc-windows-gnu}
+          - {os: windows-2022, target: x86_64-pc-windows-msvc}
+          - {os: ubuntu-22.04, target: x86_64-unknown-linux-gnu}
+          - {os: ubuntu-22.04, target: x86_64-unknown-linux-musl, use-cross: true}
+          - {os: ubuntu-22.04, target: aarch64-unknown-linux-gnu, use-cross: true}
+          - {os: ubuntu-22.04, target: arm-unknown-linux-gnueabihf, use-cross: true}
+          - {os: macos-latest, target: aarch64-apple-darwin}
+          - {os: macos-13, target: x86_64-apple-darwin}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      - name: Install prerequisites
+        shell: bash
+        run: |
+          case ${{ matrix.job.target }} in
+            arm-unknown-linux-*) sudo apt-get -y update ; sudo apt-get -y install gcc-arm-linux-gnueabihf ;;
+            aarch64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install gcc-aarch64-linux-gnu ;;
+          esac
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.job.target }}
+          override: true
+          profile: minimal # minimal component installation (ie, no documentation)
+
+      - name: Show version information (Rust, cargo, GCC)
+        shell: bash
+        run: |
+          gcc --version || true
+          if command -v ldd &>/dev/null; then
+            ldd --version || true
+          elif command -v otool &>/dev/null; then
+            otool --version || true
+          fi
+          rustup -V
+          rustup toolchain list
+          rustup default
+          rustc -V
+
+      - name: Build (debug)
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: ${{ matrix.job.use-cross }}
+          command: build
+          args: --target=${{ matrix.job.target }}
+
+      - name: Print binary dependences
+        shell: bash
+        run: |
+          # bin_name="$(sed -n 's/^name = "\(.*\)"/\1/p' Cargo.toml | head -n1)"
+          bin_dir="target/${{ matrix.job.target }}/debug/"
+
+          if [[ -e "${bin_dir}" ]]; then
+            ls -l ${bin_dir} || true 
+          fi
+
+      # - name: Test (unit)
+      #   uses: actions-rs/cargo@v1
+      #   with:
+      #     use-cross: ${{ matrix.job.use-cross }}
+      #     command: test
+      #     args: --target=${{ matrix.job.target }}
