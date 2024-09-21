@@ -70,7 +70,7 @@ jobs:
           bin_dir="target/${{ matrix.job.target }}/debug/"
 
           if [[ -e "${bin_dir}" ]]; then
-            ls -l ${bin_dir} || true 
+            ls --color=auto -lF ${bin_dir} | grep --color=auto -e '*$' || true 
           fi
 
       # - name: Test (unit)
