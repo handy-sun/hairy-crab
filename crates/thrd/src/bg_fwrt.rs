@@ -26,7 +26,8 @@ impl BgFileWriter {
                     .map_err(|err| format!("Could not create file : {}", err).into_boxed_str())?;
                 move || {
                     for msg in &rx {
-                        file.write_all(msg.as_bytes()).unwrap_or_else(|op| eprint!("op={}", op));
+                        file.write_all(msg.as_bytes())
+                            .unwrap_or_else(|op| eprint!("op={}", op));
                     }
                 }
             })

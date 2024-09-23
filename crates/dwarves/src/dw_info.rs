@@ -3,7 +3,7 @@
 #![allow(dead_code)]
 
 // use fallible_iterator::FallibleIterator;
-use gimli::{DwarfSections, Reader, Attribute};
+use gimli::{Attribute, Dwarf, DwarfSections, Reader};
 use object::{Object, ObjectSection};
 // use regex::bytes::Regex;
 use std::borrow::{self, Cow};
@@ -38,13 +38,11 @@ impl<'a> gimli::read::Relocate for &'a RelocMap {
 
 // The reader type that will be stored in `Dwarf` and `DwarfPackage`.
 // If you don't need relocations, you can use `gimli::EndianSlice` directly.
-type CusReader<'d> = gimli::RelocateReader<gimli::EndianSlice<'d, gimli::RunTimeEndian>, &'d RelocMap>;
+type CusReader<'d> =
+    gimli::RelocateReader<gimli::EndianSlice<'d, gimli::RunTimeEndian>, &'d RelocMap>;
 
 // Borrow a `Section` to create a `Reader`.
-fn borrow_section<'d>(
-    section: &'d CusSection<'d>,
-    endian: gimli::RunTimeEndian,
-) -> CusReader<'d> {
+fn borrow_section<'d>(section: &'d CusSection<'d>, endian: gimli::RunTimeEndian) -> CusReader<'d> {
     let slice = gimli::EndianSlice::new(borrow::Cow::as_ref(&section.data), endian);
     gimli::RelocateReader::new(slice, &section.relocations)
 }
@@ -62,16 +60,15 @@ fn load_section<'d>(
     })
 }
 
-pub struct DwarfMgr<'a> {
+pub struct DwarfInfoMatcher<'a> {
     dwarf_sections: DwarfSections<CusSection<'a>>,
+    runtime_endian: gimli::RunTimeEndian,
+    // dwarf: Dwarf<CusReader<'a>>
 }
 
-impl<'a> DwarfMgr<'a> {
+impl<'a> DwarfInfoMatcher<'a> {
     pub fn parse(byte_slice: &'a [u8]) -> Result<Self, Box<dyn error::Error>> {
-
         let obj_file = object::File::parse(byte_slice)?;
-
-        // let dwarf_sections = gimli::DwarfSections::load(|id| load_section(&obj_file, id.name()))?;
         // let endian = if obj_file.is_little_endian() {
         //     gimli::RunTimeEndian::Little
         // } else {
@@ -79,7 +76,7 @@ impl<'a> DwarfMgr<'a> {
         // };
         // let empty_relocations = RelocMap::default();
         // let empty_section = gimli::RelocateReader::new(gimli::EndianSlice::new(&[], endian), &empty_relocations);
-    
+
         // Create `Reader`s for all of the sections and do preliminary parsing.
         // Alternatively, we could have used `Dwarf::load` with an owned type such as `EndianRcSlice`.
         // let dwarf = dwarf_sections.borrow(|section| borrow_section(section, endian));
@@ -103,14 +100,21 @@ impl<'a> DwarfMgr<'a> {
             // dwarf: gimli::Dwarf::load(|_| load_section(SectionId::DebugInfo)).unwrap().debug_info,
             // dwarf: gimli::Dwarf::load(&load_section)?,
             // dwarf:  dwarf_sections.borrow(|section| borrow_section(section, endian))
-            dwarf_sections: gimli::DwarfSections::load(|id| load_section(&obj_file, id.name()))?
+            dwarf_sections: gimli::DwarfSections::load(|id| load_section(&obj_file, id.name()))?,
+            runtime_endian: if obj_file.is_little_endian() {
+                gimli::RunTimeEndian::Little
+            } else {
+                gimli::RunTimeEndian::Big
+            },
         })
     }
- 
+
     pub fn dump_deubg_info(&self, name: &str) -> Result<(), Box<dyn error::Error>> {
         // Create `Reader`s for all of the sections and do preliminary parsing.
         // Alternatively, we could have used `Dwarf::load` with an owned type such as `EndianRcSlice`.
-        let dwarf = self.dwarf_sections.borrow(|section| borrow_section(section, gimli::RunTimeEndian::Little));
+        let dwarf = self
+            .dwarf_sections
+            .borrow(|section| borrow_section(section, self.runtime_endian));
         let mut iter = dwarf.units();
 
         while let Some(header) = iter.next()? {
@@ -141,12 +145,12 @@ impl<'a> DwarfMgr<'a> {
 
 // Iterate over the Debugging Information Entries (DIEs) in the unit.
 fn dump_unit(unit: gimli::UnitRef<CusReader>, name: &str) -> Result<(), gimli::Error> {
-    let mut depth = 0;
+    let mut _depth = 0;
     let mut entries = unit.entries();
     while let Some((delta_depth, entry)) = entries.next_dfs()? {
-        depth += delta_depth;
+        _depth += delta_depth;
         if entry.tag() == gimli::DW_TAG_member {
-            // println!("<{}><{:06x}> {}", depth, entry.offset().0, entry.tag());
+            // println!("<{}><{:06x}> {}", _depth, entry.offset().0, entry.tag());
             let mut attrs = entry.attrs();
             let mut member = String::with_capacity(128);
             let mut is_match = false;

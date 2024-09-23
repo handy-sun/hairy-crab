@@ -1,4 +1,5 @@
 mod dw_info;
+mod sym_dw;
 
 use getopts::Options;
 use std::env::*;
@@ -128,10 +129,15 @@ fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
 
     let file_path = matches.free.first().unwrap();
     let bin_bytes = fs::read(file_path)?;
-    let _dw_mgr = dw_info::DwarfMgr::parse(bin_bytes.as_ref())?;
-    _dw_mgr.dump_deubg_info("StateList")
+
+    // let _dw_mgr = dw_info::DwarfInfoMatcher::parse(bin_bytes.as_ref())?;
+    // _dw_mgr.dump_deubg_info("StateList")
+
+    let sym_dw = sym_dw::SymDwarf::parse(&bin_bytes)?;
+    sym_dw.dump_deubg_info("_").ok();
+    sym_dw.loop_sym();
+
     // io::stdout().write_fmt(format_args!("{:?}\n", _dw_mgr)).ok();
     // parse_bin(file_path.as_str()).ok();
-
-    // Ok(())
+    Ok(())
 }

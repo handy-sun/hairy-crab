@@ -3,28 +3,29 @@ name = "dwarves"
 version = "0.1.0"
 edition = "2021"
 
-
 [dependencies]
-crossbeam = "0.8"
-fallible-iterator = { version = "0.3.0", default-features = false, optional = true }
+# crossbeam = "0.8"
+# fallible-iterator = { version = "0.3.0", default-features = false, optional = true }
 getopts = "0.2"
-memmap2 = "0.9.4"
-num_cpus = "1"
-rayon = "1.0"
-regex = "1"
-typed-arena = "2"
+# memmap2 = "0.9.4"
+# num_cpus = "1"
+# rayon = "1.0"
+# regex = "1"
+# typed-arena = "2"
 goblin = "0.8.1"
 
+[dependencies.symbolic]
+version = "12.11.1"
 
 [dependencies.gimli]
 version = "0.31.0"
-# features = [
-#     "read"
-# ]
+features = [
+    "read"
+]
 
 [dependencies.scroll]
 version = "0.12"
-default_features = false
+# default_features = false
 
 [dependencies.object]
 version = "0.36.0"
