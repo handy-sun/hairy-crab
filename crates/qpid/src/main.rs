@@ -1,18 +1,19 @@
 #![allow(special_module_name)]
 mod lib;
 use std::env;
-use std::time::Instant;
+// use std::time::Instant;
 
-fn main() -> Result<(),  &'static str> {
-    match env::args().skip(1).collect::<Vec<_>>().first() {
+fn main() -> Result<(), &'static str> {
+    match env::args().skip(1).next() {
         Some(p) => {
-            let t = Instant::now();
-            // println!("{:#?}", lib::collect_matched_pids(p));
-            let v = lib::collect_matched_pids(p);
-            println!("{:?}", t.elapsed());
-            for e in v {
-                println!("pid: {}, cmdline: {}", e.pid, e.cmdline);
-            }
+            // let t = Instant::now();
+            // let mut iter = lib::collect_matched_pids(p);
+            // for proc in iter.by_ref() {
+            //     println!("{:?}", proc);
+            //     println!("{:?}", t.elapsed());
+            // }
+            println!("{:}", lib::join_result_pids(&p));
+            // eprintln!("elapsed: {:?}", t.elapsed());
             Ok(())
         }
         None => return Err("Must input one arg"),
