@@ -101,12 +101,9 @@ fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     );
 
     #[cfg(debug_assertions)]
-    let arg_str_vec = if cfg!(debug_assertions) {
-        // vec![]
-        vec!["-l", "-i", "/usr/local/bin/ntf"]
-    } else {
-        vec!["", "-i", "/usr/local/bin/ntf", "-l"]
-    };
+    let arg_str_vec = vec!["-l", "-i", "/usr/local/bin/ntf"];
+    #[cfg(not(debug_assertions))]
+    let arg_str_vec = vec!["", "-i", "/usr/local/bin/ntf", "-l"];
 
     let matches = match opts.parse(arg_str_vec) {
         Ok(m) => m,

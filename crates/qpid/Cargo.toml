@@ -1,0 +1,11 @@
+[package]
+name = "qpid"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+walkdir = "2.*"
+
+[[bin]]
+name = "qpid"
+path = "src/main.rs"
