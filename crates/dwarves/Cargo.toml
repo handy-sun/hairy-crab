@@ -4,15 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# crossbeam = "0.8"
-# fallible-iterator = { version = "0.3.0", default-features = false, optional = true }
 getopts = "0.2"
-# memmap2 = "0.9.4"
-# num_cpus = "1"
-# rayon = "1.0"
-# regex = "1"
-# typed-arena = "2"
 goblin = "0.8.1"
+# libbpf-sys = "1.4.5+v1.4.5"
 
 [dependencies.symbolic]
 version = "12.11.1"
