@@ -41,7 +41,13 @@ impl ProcAttr {
         // .map_err(|err| anyhow!("Problem open file {:?}: {}", proc_maps, err))?;
         let status_reader = io::BufReader::new(status_file);
         let first_line = status_reader.lines().next().unwrap()?;
-        let status_name = String::from(first_line.split_once(':').unwrap_or_default().1.trim_ascii());
+        let status_name = String::from(
+            first_line
+                .split_once(':')
+                .unwrap_or_default()
+                .1
+                .trim_ascii(),
+        );
 
         Ok(Self {
             pid,

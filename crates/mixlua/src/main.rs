@@ -5,25 +5,31 @@ fn main() -> mlua::Result<()> {
     let lua_ctx = Lua::new();
     let globals = lua_ctx.globals();
 
-    globals.set("string_var", "hello")?;
-    globals.set("int_var", 42)?;
+    // globals.set("string_var", "hello")?;
+    // globals.set("int_var", 42)?;
 
-    assert_eq!(globals.get::<String>("string_var")?, "hello");
-    assert_eq!(globals.get::<i64>("int_var")?, 42);
+    // assert_eq!(globals.get::<String>("string_var")?, "hello");
+    // assert_eq!(globals.get::<i64>("int_var")?, 42);
 
     lua_ctx
         .load(
             r#"
-            Position = {}
-            Position.__index = Position
-            function Position.new(x, y)
-                return setmetatable({x=x, y=y}, Position)
-            end
- 
-            function Position:add(other)
-                return Position.new(self.x + other.x, self.y + other.y)
-            end
-            "#,
+Position = {}
+Position.__index = Position
+
+function Position.new(x, y)
+    return setmetatable({ x = x, y = y }, Position)
+end
+
+function Position:add(other)
+    return Position.new(self.x + other.x, self.y + other.y)
+end
+
+-- Overload `__tostring` meta method
+function Position:__tostring()
+    return "Position(" .. self.x .. ", " .. self.y .. ")"
+end
+"#,
         )
         .set_name("example code")
         .exec()?;
@@ -32,20 +38,17 @@ fn main() -> mlua::Result<()> {
     pos_a.set("x", 1i32)?;
     pos_a.set("y", 2i32)?;
 
-    let pos_b = lua_ctx.create_table()?;
-    pos_b.set("x", 3i32)?;
-    pos_b.set("y", 4i32)?;
+    // let pos_b = lua_ctx.create_table()?;
+    // pos_b.set("x", 3i32)?;
+    // pos_b.set("y", 4i32)?;
 
-    // let pos_sum = globals.get::<Table>("Position")?
-    //     .call::<()>("new", 1i32, 2i32)?
-    //     .call::<()>("add", pos_b)?;
-    let pos_sum: Table = pos_a.call_function("Position:add", pos_b)?;
+    // if pos_b want call method must create by globals
+    let pos_b: Table = globals
+        .get::<Table>("Position")?
+        .call_function("new", (3i32, 4i32))?;
 
-    println!(
-        "Lua structure result: ({}, {})",
-        pos_sum.get::<i32>("x")?,
-        pos_sum.get::<i32>("y")?
-    );
+    let pos_sum: Table = pos_b.call_method("add", pos_a)?;
+    println!("Lua structure sum result: {:?}", pos_sum.to_string()?);
 
     Ok(())
 }
