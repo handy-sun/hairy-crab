@@ -1,9 +1,11 @@
-
 use mlua::{Lua, ObjectLike, Table, Value};
+use std::fs;
+use std::path::PathBuf;
 
 fn print_table<'a>(tab: &'a Table, indent: usize) -> mlua::Result<String> {
     let prefix = vec!["  "; indent].concat();
-    let mut output = String::with_capacity(64);
+    let mut output: Vec<_> = Vec::with_capacity(16);
+
     for pair in tab.pairs::<Value, Value>() {
         let (key, value) = pair?;
         let key_str = match key {
@@ -14,34 +16,47 @@ fn print_table<'a>(tab: &'a Table, indent: usize) -> mlua::Result<String> {
 
         match value {
             Value::Table(child) => {
-                output.push_str(format!("{}{:?}:\n", prefix, key_str).as_ref());
-                output.push_str(&print_table(&child, indent + 1)?);
+                output.push(format!("{}{}:\n", prefix, key_str));
+                output.push(print_table(&child, indent + 1)?);
             }
-            Value::Integer(integer) => output.push_str(format!("{}{:?}: {}\n", prefix, key_str, integer).as_ref()),
-            Value::String(s) => output.push_str(format!("{}{:?}: {}\n", prefix, key_str, s.to_string_lossy()).as_ref()),
-            _ => ()
+            Value::Integer(integer) => {
+                output.push(format!("{}{}: {}\n", prefix, key_str, integer))
+            }
+            Value::String(s) => output.push(format!(
+                "{}{}: {}\n",
+                prefix,
+                key_str,
+                s.to_string_lossy()
+            )),
+            _ => (),
         }
     }
-    return Ok(output);
+    return Ok(output.concat());
 }
 
 fn main() -> mlua::Result<()> {
-    let Some(lua_file) = std::env::args().skip(1).next() else {
-        eprintln!("Must input lua file");
-        std::process::exit(1);
+    let lua_path = if let Some(lua_file) = std::env::args().skip(1).next() {
+        PathBuf::from(lua_file)
+    } else {
+        let self_path = fs::read_link("/proc/self/exe")?;
+        self_path
+            .parent()
+            .expect("Should get dir")
+            .join("../../crates/mixlua/lua/pos.lua")
+            .canonicalize()?
     };
 
-    if !std::fs::exists(&lua_file)? {
-        eprintln!("Lua file not exist");
+    if !fs::exists(&lua_path)? {
+        eprintln!("Lua file not exist: {:?}", lua_path);
         std::process::exit(1);
     }
 
     // This loads the default Lua std library *without* the debug library.
     let lua_ctx = Lua::new();
     let globals = lua_ctx.globals();
-    let file_content = std::fs::read(&lua_file)?;
-    lua_ctx.load(file_content.to_vec()).exec()?;
+    let file_content = fs::read_to_string(&lua_path)?;
 
+    lua_ctx.load(&file_content).exec()?;
     // if pos_b want call method must create by globals
     let bytes = "\x04\x00\x01\x00\x0b\x03\x01\x0a";
 
@@ -49,7 +64,7 @@ fn main() -> mlua::Result<()> {
         .get::<Table>("Structure")?
         .call_function("new", bytes)?;
 
-    println!("result: {:?}", res.to_string()?);
+    // println!("result: {:?}", res.to_string()?);
 
     let inner: Table = res.get("inner")?;
     println!("{}", print_table(&inner, 0)?);

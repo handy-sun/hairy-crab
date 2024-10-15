@@ -30,16 +30,16 @@ end
 function PrintTable(t, indent)
     indent = indent or 0
     local prefix = string.rep("  ", indent)
-    local str = ""
+    local str_list = {}
     for key, value in pairs(t) do
         if type(value) == "table" then
-            str = str .. (prefix .. tostring(key) .. ':\n')
-            str = str .. PrintTable(value, indent + 1)
+            table.insert(str_list, prefix .. tostring(key) .. ':\n')
+            table.insert(str_list, PrintTable(value, indent + 1))
         else
-            str = str .. (prefix .. tostring(key) .. ": " .. tostring(value) .. '\n')
+            table.insert(str_list, prefix .. tostring(key) .. ": " .. tostring(value) .. '\n')
         end
     end
-    return str
+    return table.concat(str_list, '')
 end
 
 Structure = {}
@@ -60,7 +60,4 @@ function Structure:__tostring()
     return PrintTable(self.inner)
 end
 
--- local bytes = "\x04\x00\x01\x00\x0b\x03\x01\x0a"
--- local test_stru = Structure.new(bytes)
-
--- print(test_stru)
+-- print(Structure.new("\x04\x00\x00\x00\x0b\x03\x01\x0a"))
