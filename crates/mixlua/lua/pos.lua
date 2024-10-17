@@ -33,10 +33,10 @@ function PrintTable(t, indent)
     local str_list = {}
     for key, value in pairs(t) do
         if type(value) == "table" then
-            table.insert(str_list, prefix .. tostring(key) .. ':\n')
+            table.insert(str_list, string.format("%s%s:\n", prefix, tostring(key)))
             table.insert(str_list, PrintTable(value, indent + 1))
         else
-            table.insert(str_list, prefix .. tostring(key) .. ": " .. tostring(value) .. '\n')
+            table.insert(str_list, string.format("%s%s: %s\n", prefix, tostring(key), tostring(value)))
         end
     end
     return table.concat(str_list, '')
@@ -60,4 +60,4 @@ function Structure:__tostring()
     return PrintTable(self.inner)
 end
 
--- print(Structure.new("\x04\x00\x00\x00\x0b\x03\x01\x0a"))
+print(Structure.new("\x04\x00\x00\x00\x0b\x03\x01\x0a"))
