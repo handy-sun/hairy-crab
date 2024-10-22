@@ -1,6 +1,6 @@
 use mlua::{Lua, ObjectLike, Table, Value};
-use std::fs;
-use std::path::PathBuf;
+use std::{fs, env};
+
 
 fn print_table<'a>(tab: &'a Table, indent: usize) -> mlua::Result<String> {
     let prefix = vec!["  "; indent].concat();
@@ -35,34 +35,40 @@ fn print_table<'a>(tab: &'a Table, indent: usize) -> mlua::Result<String> {
 }
 
 fn main() -> mlua::Result<()> {
-    let lua_path = if let Some(lua_file) = std::env::args().skip(1).next() {
-        PathBuf::from(lua_file)
-    } else {
-        let self_path = fs::read_link("/proc/self/exe")?;
-        self_path
-            .parent()
-            .expect("Should get dir")
-            .join("../../crates/mixlua/lua/pos.lua")
-            .canonicalize()?
-    };
+    let self_dir = fs::read_link("/proc/self/exe")?;
+    let self_dir = self_dir
+        .parent()
+        .expect("Should get dir")
+        .join("../../crates/mixlua/lua")
+        .canonicalize()?;
 
-    if !fs::exists(&lua_path)? {
-        eprintln!("Lua file not exist: {:?}", lua_path);
-        std::process::exit(1);
-    }
-
+    env::set_current_dir(&self_dir)?;
+    println!("Successfully changed working directory to {}", self_dir.display());
     // This loads the default Lua std library *without* the debug library.
     let lua_ctx = Lua::new();
-    let globals = lua_ctx.globals();
-    let file_content = fs::read_to_string(&lua_path)?;
 
-    lua_ctx.load(&file_content).exec()?;
+    let globals = lua_ctx.globals();
+
+    let files = vec!["init.lua", "st.lua"];
+
+    for f in files {
+        let lua_src_dir = self_dir.join(f);
+        if !fs::exists(&lua_src_dir)? {
+            eprintln!("Lua file not exist: {:?}", lua_src_dir);
+            std::process::exit(1);
+        }
+
+        let file_content = fs::read_to_string(&lua_src_dir)?;
+
+        lua_ctx.load(&file_content).exec()?;
+    }
+
     // if pos_b want call method must create by globals
-    let bytes = "\x04\x00\x01\x00\x0b\x03\x01\x0a";
+    let bytes = "\x04\x00\x00\x00\x0b\x03\x01\x0a";
 
     let res: Table = globals
         .get::<Table>("Structure")?
-        .call_function("new", bytes)?;
+        .call_function("new_inner", bytes)?;
 
     // println!("result: {:?}", res.to_string()?);
 
