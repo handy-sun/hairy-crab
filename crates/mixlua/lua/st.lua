@@ -10,7 +10,7 @@ function Structure.new_inner(bytes)
         { name = "uns", size = 2 },
     }
 
-    return setmetatable({ inner = SetupTableData(bytes, true, true, _temp) }, Structure)
+    return setmetatable({ inner = SetupTableData(bytes, true, _temp) }, Structure)
 end
 
 -- Overload `__tostring` meta method

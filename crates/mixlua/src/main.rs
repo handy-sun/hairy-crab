@@ -2,7 +2,7 @@ use mlua::{Lua, ObjectLike, Table, Value};
 use std::{fs, env};
 
 
-fn print_table<'a>(tab: &'a Table, indent: usize) -> mlua::Result<String> {
+fn print_table(tab: &Table, indent: usize) -> mlua::Result<String> {
     let prefix = vec!["  "; indent].concat();
     let mut output: Vec<_> = Vec::with_capacity(16);
 
@@ -31,7 +31,7 @@ fn print_table<'a>(tab: &'a Table, indent: usize) -> mlua::Result<String> {
             _ => (),
         }
     }
-    return Ok(output.concat());
+    Ok(output.concat())
 }
 
 fn main() -> mlua::Result<()> {
@@ -44,13 +44,12 @@ fn main() -> mlua::Result<()> {
 
     env::set_current_dir(&self_dir)?;
     println!("Successfully changed working directory to {}", self_dir.display());
-    // This loads the default Lua std library *without* the debug library.
-    let lua_ctx = Lua::new();
 
-    let globals = lua_ctx.globals();
+    // This loads the default Lua std library *without* the debug library.
+    let lua = Lua::new();
+    let globals = lua.globals();
 
     let files = vec!["init.lua", "st.lua"];
-
     for f in files {
         let lua_src_dir = self_dir.join(f);
         if !fs::exists(&lua_src_dir)? {
@@ -59,17 +58,14 @@ fn main() -> mlua::Result<()> {
         }
 
         let file_content = fs::read_to_string(&lua_src_dir)?;
-
-        lua_ctx.load(&file_content).exec()?;
+        lua.load(&file_content).exec()?;
     }
 
-    // if pos_b want call method must create by globals
-    let bytes = "\x04\x00\x00\x00\x0b\x03\x01\x0a";
+    let lua_str = lua.create_string(b"\x04\x00\x00\x00\x0b\x03\xa1\x0a")?;
 
     let res: Table = globals
         .get::<Table>("Structure")?
-        .call_function("new_inner", bytes)?;
-
+        .call_function("new_inner", lua_str)?;
     // println!("result: {:?}", res.to_string()?);
 
     let inner: Table = res.get("inner")?;
