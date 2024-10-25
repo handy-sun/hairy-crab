@@ -5,7 +5,7 @@ function Bytes2int(bytes, is_little_endian)
     return string.unpack(fmt, bytes)
 end
 
-function SetupTableData(bytes, is_little_endian, is_array, tab_list)
+function SetupTableData(bytes, tab_list)
     local index = 1
     local new_list = {}
     while true do
@@ -20,7 +20,8 @@ function SetupTableData(bytes, is_little_endian, is_array, tab_list)
             table.insert(new_list, {
                 name = value.name,
                 size = value.size,
-                data = Bytes2int(part_bytes, is_little_endian)
+                -- data = Bytes2int(part_bytes, is_little_endian)
+                data = string.unpack(value.fmt, part_bytes)
             })
 
             index = next_index
