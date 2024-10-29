@@ -10,17 +10,15 @@ function SetupTableData(bytes, tab_list)
     local new_list = {}
     while true do
         for _, value in pairs(tab_list) do
-            if index > #bytes then
+            if index + value.size - 1 > #bytes then
                 return new_list
             end
-            local part_size = value.size
-            local next_index = index + part_size
+            local next_index = index + value.size
             local part_bytes = string.sub(bytes, index, next_index - 1)
 
             table.insert(new_list, {
                 name = value.name,
                 size = value.size,
-                -- data = Bytes2int(part_bytes, is_little_endian)
                 data = string.unpack(value.fmt, part_bytes)
             })
 

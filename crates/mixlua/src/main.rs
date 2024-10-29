@@ -71,5 +71,7 @@ fn main() -> mlua::Result<()> {
     let inner: Table = res.get("inner")?;
     println!("{}", print_table(&inner, 0)?);
 
+    // let package: Table = globals.get("package").context("get _G.package")?;
+    // println!("{}", print_table(&package, 0)?);
     Ok(())
 }
