@@ -692,6 +692,7 @@ name = "mixlua"
 version = "0.1.0"
 dependencies = [
  "mlua",
+ "walkdir",
 ]
 
 [[package]]
